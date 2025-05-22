@@ -62,6 +62,7 @@ export const ChatScreen = () => {
 
   const renderMessage = ({ item: message }: { item: any }) => {
     const isSentByMe = message.senderId === currentUser?.id;
+    console.log('renderMessage debug:', { messageSenderId: message.senderId, currentUserId: currentUser?.id, isSentByMe });
     return (
       <View
         style={[

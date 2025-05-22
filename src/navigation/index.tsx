@@ -82,6 +82,8 @@ export const Navigation = () => {
       try {
         const user = await getCurrentUser();
         if (user) {
+          // Force demo user id to 'currentUser' for demo consistency
+          user.id = 'currentUser';
           setCurrentUser(user);
           setIsAuthenticated(true);
         }
@@ -96,6 +98,8 @@ export const Navigation = () => {
   }, []);
 
   const signIn = (user: User) => {
+    // Force demo user id to 'currentUser' for demo consistency
+    user.id = 'currentUser';
     setCurrentUser(user);
     setIsAuthenticated(true);
   };

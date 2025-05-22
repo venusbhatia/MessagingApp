@@ -32,7 +32,7 @@ export type Conversation = {
   isGroup?: boolean;
   name?: string;
   createdAt?: Date;
-  group?: 'Friends' | 'Family' | 'Work' | 'School' | 'Home' | 'Love' | 'Other';
+  group?: 'Friends' | 'Family' | 'Work' | 'School' | 'Home' | 'Other';
 };
 
 export type RootStackParamList = {
@@ -55,7 +55,7 @@ export type RootStackParamList = {
   Home: undefined;
   Messages: undefined;
   GroupConversations: {
-    group: 'Friends' | 'Family' | 'Work' | 'School' | 'Home' | 'Love' | 'Other';
+    group: 'Friends' | 'Family' | 'Work' | 'School' | 'Home' | 'Other';
   };
 };
 

@@ -66,7 +66,7 @@ export const MessageProvider: React.FC<{ children: React.ReactNode }> = ({ child
     setCurrentUser(defaultUser);
 
     // Assign users to groups in a round-robin fashion
-    const GROUPS = ['Friends', 'Family', 'Work', 'School', 'Home', 'Love', 'Other'];
+    const GROUPS = ['Friends', 'Family', 'Work', 'School', 'Home', 'Other'];
     const DEMO_MESSAGES = [
       "Hey, how's it going?",
       "What's up?",
@@ -127,6 +127,7 @@ export const MessageProvider: React.FC<{ children: React.ReactNode }> = ({ child
 
   // Get a user by ID
   const getUser = useCallback((id: string): User | undefined => {
+    console.log('getUser called with id:', id, 'Available user ids:', users.map(u => u.id));
     return users.find(user => user.id === id);
   }, [users]);
 
@@ -219,28 +220,35 @@ export const MessageProvider: React.FC<{ children: React.ReactNode }> = ({ child
     if (!currentUser) {
       throw new Error('No current user');
     }
-    
     const conversation = conversations.find(c => c.id === conversationId);
     if (!conversation) {
       throw new Error('Conversation not found');
     }
-    
-    // Find the recipient (in a 1:1 chat, it's the other participant)
-    const recipientId = conversation.participants.find(id => id !== senderId);
+    // Always use currentUser.id as sender in demo
+    const sender = currentUser.id;
+    // For 1:1 chat, recipient is the other participant
+    let recipientId: string | undefined;
+    if (conversation.participants.length === 2) {
+      recipientId = conversation.participants.find(id => id !== sender);
+    } else {
+      // fallback for group chat (not used in demo)
+      recipientId = conversation.participants.find(id => id !== sender);
+    }
+    console.log('sendMessage debug:', { conversation, sender, recipientId, participants: conversation.participants });
     if (!recipientId) {
+      console.error('Recipient not found in conversation:', conversation);
       throw new Error('Recipient not found in conversation');
     }
-    
     const recipient = users.find(u => u.id === recipientId);
     if (!recipient) {
+      console.error('Recipient user not found:', recipientId, 'Available users:', users.map(u => u.id));
       throw new Error('Recipient user not found');
     }
-    
     const newMessage: Message = {
       id: uuidv4(),
       conversationId,
       content: text,
-      senderId,
+      senderId: sender,
       senderName: currentUser.displayName,
       recipientId: recipient.id,
       recipientName: recipient.displayName,
@@ -248,9 +256,7 @@ export const MessageProvider: React.FC<{ children: React.ReactNode }> = ({ child
       read: false,
       status: 'sent',
     };
-    
     setMessages(prev => [newMessage, ...prev]);
-    
     // Update conversation's last message
     setConversations(prev => 
       prev.map(conv => 
@@ -263,12 +269,11 @@ export const MessageProvider: React.FC<{ children: React.ReactNode }> = ({ child
                 senderId: newMessage.senderId,
               },
               updatedAt: new Date(),
-              unreadCount: senderId === currentUser.id ? conv.unreadCount : conv.unreadCount + 1,
+              unreadCount: sender === currentUser.id ? conv.unreadCount : conv.unreadCount + 1,
             }
           : conv
       )
     );
-    
     return newMessage;
   }, [currentUser, users, conversations]);
 

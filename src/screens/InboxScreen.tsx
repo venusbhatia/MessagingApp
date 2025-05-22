@@ -27,12 +27,11 @@ const GROUPS = ['Friends', 'Family', 'Work', 'School'];
 const GROUP_BUBBLES = [
   { key: 'Home', label: 'Home', emoji: '🏠' },
   { key: 'Family', label: 'Family', emoji: '👨‍👩‍👧‍👦' },
-  { key: 'Love', label: 'Love', emoji: '💖' },
   { key: 'Friends', label: 'Friends', emoji: '🧑‍🤝‍🧑' },
   { key: 'School', label: 'School', emoji: '🎒' },
 ];
 
-const ALLOWED_GROUPS = ['Friends', 'Family', 'Work', 'School', 'Home', 'Love', 'Other'] as const;
+const ALLOWED_GROUPS = ['Friends', 'Family', 'Work', 'School', 'Home', 'Other'] as const;
 type AllowedGroup = typeof ALLOWED_GROUPS[number];
 
 const InboxScreen = () => {
@@ -74,14 +73,25 @@ const InboxScreen = () => {
   const renderConversation = ({ item }: { item: Conversation }) => {
     const otherParticipantId = item.participants.find(id => id !== currentUser?.id);
     const otherUser = otherParticipantId ? getUser(otherParticipantId) : null;
-    const displayName = item.isGroup ? 
-      (item.name || 'Group Chat') : 
-      (otherUser?.displayName || 'Unknown User');
+    const displayName = item.isGroup
+      ? (item.name || 'Group Chat')
+      : (otherUser?.displayName || 'Unknown User');
+
+    // For last message sender display
+    let lastSenderPrefix = '';
+    if (item.lastMessage) {
+      if (item.lastMessage.senderId === currentUser?.id) {
+        lastSenderPrefix = 'You: ';
+      } else {
+        const senderUser = getUser(item.lastMessage.senderId);
+        lastSenderPrefix = senderUser ? senderUser.displayName + ': ' : '';
+      }
+    }
 
     return (
       <TouchableOpacity
         style={styles.messageItem}
-        onPress={() => navigation.navigate('Chat', { 
+        onPress={() => navigation.navigate('Chat', {
           recipientId: otherParticipantId || '',
           recipientName: displayName,
           conversationId: item.id
@@ -100,7 +110,7 @@ const InboxScreen = () => {
                 ]}
                 numberOfLines={1}
               >
-                {item.lastMessage.senderId === currentUser?.id ? 'You: ' : ''}{item.lastMessage.content}
+                {lastSenderPrefix}{item.lastMessage.content}
               </Text>
               <Text style={styles.timestamp}>
                 {format(item.lastMessage.timestamp, 'MMM d, HH:mm')}
