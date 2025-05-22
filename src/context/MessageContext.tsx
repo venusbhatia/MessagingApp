@@ -4,22 +4,17 @@ import { v4 as uuidv4 } from 'uuid';
 import { Message, Conversation, User } from '../types';
 
 interface MessageContextType {
-  // Conversations
   conversations: Conversation[];
   currentConversation: Conversation | null;
   createConversation: (participants: string[], isGroup?: boolean, name?: string) => string;
   getConversation: (id: string) => Conversation | undefined;
   setCurrentConversation: (id: string | null) => void;
   deleteConversation: (id: string) => void;
-  
-  // Messages
   messages: Message[];
   sendMessage: (conversationId: string, text: string, senderId: string) => Promise<Message>;
   updateMessage: (id: string, text: string) => Promise<void>;
   deleteMessage: (id: string) => Promise<void>;
   markAsRead: (messageId: string) => Promise<void>;
-  
-  // Users
   currentUser: User | null;
   users: User[];
   getUser: (id: string) => User | undefined;
@@ -27,9 +22,7 @@ interface MessageContextType {
 
 const MessageContext = createContext<MessageContextType | undefined>(undefined);
 
-// Mock data for demo purposes
 const MOCK_USERS: User[] = [
-  // Add users user1 to user23
   ...Array.from({ length: 23 }, (_, i) => ({
     id: `user${i + 1}`,
     email: `user${i + 1}@example.com`,
@@ -52,10 +45,7 @@ export const MessageProvider: React.FC<{ children: React.ReactNode }> = ({ child
   const [currentConversation, setCurrentConversationState] = useState<Conversation | null>(null);
   const [users] = useState<User[]>(MOCK_USERS);
 
-  // Load data from storage on mount
   useEffect(() => {
-    // Always use demo data for development/testing
-    // Set a default user for demo
     const defaultUser: User = {
       id: 'currentUser',
       email: 'me@example.com',
@@ -65,7 +55,6 @@ export const MessageProvider: React.FC<{ children: React.ReactNode }> = ({ child
     };
     setCurrentUser(defaultUser);
 
-    // Assign users to groups in a round-robin fashion
     const GROUPS = ['Friends', 'Family', 'Work', 'School', 'Home', 'Other'];
     const DEMO_MESSAGES = [
       "Hey, how's it going?",
@@ -111,7 +100,6 @@ export const MessageProvider: React.FC<{ children: React.ReactNode }> = ({ child
     setMessages([]);
   }, []);
 
-  // Save data to storage when it changes
   useEffect(() => {
     const saveData = async () => {
       try {
@@ -125,27 +113,22 @@ export const MessageProvider: React.FC<{ children: React.ReactNode }> = ({ child
     saveData();
   }, [conversations, messages]);
 
-  // Get a user by ID
   const getUser = useCallback((id: string): User | undefined => {
     console.log('getUser called with id:', id, 'Available user ids:', users.map(u => u.id));
     return users.find(user => user.id === id);
   }, [users]);
 
-  // Get a conversation by ID
   const getConversation = useCallback((id: string): Conversation | undefined => {
     return conversations.find(conv => conv.id === id);
   }, [conversations]);
 
-  // Set the current conversation
   const setCurrentConversation = useCallback((id: string | null) => {
     if (!id) {
       setCurrentConversationState(null);
       return;
     }
-    
     const conversation = getConversation(id);
     if (conversation) {
-      // Mark all messages in this conversation as read
       setMessages(prevMessages => 
         prevMessages.map(msg => 
           msg.conversationId === id && !msg.read 
@@ -153,8 +136,6 @@ export const MessageProvider: React.FC<{ children: React.ReactNode }> = ({ child
             : msg
         )
       );
-      
-      // Update unread count
       if (conversation.unreadCount > 0) {
         setConversations(prev => 
           prev.map(conv => 
@@ -164,18 +145,14 @@ export const MessageProvider: React.FC<{ children: React.ReactNode }> = ({ child
           )
         );
       }
-      
       setCurrentConversationState(conversation);
     }
   }, [getConversation]);
 
-  // Create a new conversation
   const createConversation = useCallback((participantIds: string[], isGroup = false, name?: string): string => {
     if (!currentUser) {
       throw new Error('No current user');
     }
-    
-    // For 1:1 chats, check if a conversation already exists
     if (!isGroup && participantIds.length === 1) {
       const existingConversation = conversations.find(conv => 
         !conv.isGroup && 
@@ -183,12 +160,10 @@ export const MessageProvider: React.FC<{ children: React.ReactNode }> = ({ child
         conv.participants.includes(participantIds[0]) &&
         conv.participants.includes(currentUser.id)
       );
-      
       if (existingConversation) {
         return existingConversation.id;
       }
     }
-    
     const newConversation: Conversation = {
       id: uuidv4(),
       participants: [...participantIds, currentUser.id],
@@ -198,24 +173,18 @@ export const MessageProvider: React.FC<{ children: React.ReactNode }> = ({ child
       createdAt: new Date(),
       updatedAt: new Date(),
     };
-    
     setConversations(prev => [newConversation, ...prev]);
     return newConversation.id;
   }, [currentUser, conversations]);
 
-  // Delete a conversation
   const deleteConversation = useCallback((id: string) => {
     setConversations(prev => prev.filter(conv => conv.id !== id));
-    
-    // Also delete all messages in this conversation
     setMessages(prev => prev.filter(msg => msg.conversationId !== id));
-    
     if (currentConversation?.id === id) {
       setCurrentConversationState(null);
     }
   }, [currentConversation]);
 
-  // Send a new message
   const sendMessage = useCallback(async (conversationId: string, text: string, senderId: string): Promise<Message> => {
     if (!currentUser) {
       throw new Error('No current user');
@@ -224,14 +193,11 @@ export const MessageProvider: React.FC<{ children: React.ReactNode }> = ({ child
     if (!conversation) {
       throw new Error('Conversation not found');
     }
-    // Always use currentUser.id as sender in demo
     const sender = currentUser.id;
-    // For 1:1 chat, recipient is the other participant
     let recipientId: string | undefined;
     if (conversation.participants.length === 2) {
       recipientId = conversation.participants.find(id => id !== sender);
     } else {
-      // fallback for group chat (not used in demo)
       recipientId = conversation.participants.find(id => id !== sender);
     }
     console.log('sendMessage debug:', { conversation, sender, recipientId, participants: conversation.participants });
@@ -257,7 +223,6 @@ export const MessageProvider: React.FC<{ children: React.ReactNode }> = ({ child
       status: 'sent',
     };
     setMessages(prev => [newMessage, ...prev]);
-    // Update conversation's last message
     setConversations(prev => 
       prev.map(conv => 
         conv.id === conversationId
@@ -277,7 +242,6 @@ export const MessageProvider: React.FC<{ children: React.ReactNode }> = ({ child
     return newMessage;
   }, [currentUser, users, conversations]);
 
-  // Update a message
   const updateMessage = useCallback(async (id: string, text: string) => {
     setMessages(prev =>
       prev.map(msg =>
@@ -288,12 +252,10 @@ export const MessageProvider: React.FC<{ children: React.ReactNode }> = ({ child
     );
   }, []);
 
-  // Delete a message
   const deleteMessage = useCallback(async (id: string) => {
     setMessages(prev => prev.filter(msg => msg.id !== id));
   }, []);
 
-  // Mark a message as read
   const markAsRead = useCallback(async (messageId: string) => {
     setMessages(prev =>
       prev.map(msg =>
@@ -307,22 +269,17 @@ export const MessageProvider: React.FC<{ children: React.ReactNode }> = ({ child
   return (
     <MessageContext.Provider
       value={{
-        // Conversations
         conversations,
         currentConversation,
         createConversation,
         getConversation,
         setCurrentConversation,
         deleteConversation,
-        
-        // Messages
         messages,
         sendMessage,
         updateMessage,
         deleteMessage,
         markAsRead,
-        
-        // Users
         currentUser,
         users,
         getUser,
