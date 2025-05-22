@@ -2,6 +2,9 @@
 
 A simple CRUD (Create, Read, Update, Delete) messaging application built with React Native and Expo.
 
+
+<p float="left"> <img src="https://github.com/user-attachments/assets/2f90447e-5e99-4281-b433-c8f292e5ed70" width="200" /> <img src="https://github.com/user-attachments/assets/0701f266-1c25-4577-a32e-06d5d9114b44" width="200" /> <img src="https://github.com/user-attachments/assets/6b72b024-f20d-41eb-ac5d-e8eee7747254" width="200" /> <img src="https://github.com/user-attachments/assets/900d9103-1ff7-4048-bc0f-4d69da591430" width="200" /> <img src="https://github.com/user-attachments/assets/e7b88880-81ba-4eed-a42b-b0ced882eed9" width="200" /> <img src="https://github.com/user-attachments/assets/90b38ffd-51b9-42ce-bf2b-9e5ebd4afa86" width="200" /> </p>
+
 ## Features
 
 - View a list of messages
